@@ -1,8 +1,7 @@
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
-
-import type { IntegrationMode } from './types';
+import type { IntegrationMode } from '@/types/chat/types';
 
 interface ModeSelectorProps {
   integrationModes: IntegrationMode[]

@@ -5,10 +5,10 @@ import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { IntegrationMode } from '@/types/chat/types';
 import type { Message } from '@ai-sdk/react';
 
 import { ChatMessage } from './ChatMessage';
-import type { IntegrationMode } from './types';
 
 interface ChatPanelProps {
   messages: Message[]

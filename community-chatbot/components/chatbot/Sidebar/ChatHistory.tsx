@@ -1,9 +1,9 @@
 import { Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
-import { ChatHistoryItem, IntegrationMode } from '@/components/chatbot/types';
 import { Button } from '@/components/ui/button';
 import { SidebarGroup } from '@/components/ui/sidebar';
+import { ChatHistoryItem, IntegrationMode } from '@/types/chat/types';
 
 interface ChatHistoryProps {
 	chatHistory: ChatHistoryItem[]
