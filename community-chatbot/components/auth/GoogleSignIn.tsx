@@ -15,6 +15,7 @@ export function GoogleSignInButton() {
     const router = useRouter()
     const { toast } = useToast()
 
+
     const handleGoogleSignIn = async () => {
         setLoading(true)
         try {
