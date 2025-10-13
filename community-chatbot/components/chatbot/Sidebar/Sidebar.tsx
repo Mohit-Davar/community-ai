@@ -5,8 +5,8 @@ import { NewChatButton } from '@/components/chatbot/Sidebar/NewChatButton';
 import {
   Header as SidebarHeader,
 } from '@/components/chatbot/Sidebar/SidebarHeader';
-import { ChatHistoryItem, IntegrationMode } from '@/components/chatbot/types';
 import { Sidebar, SidebarContent, useSidebar } from '@/components/ui/sidebar';
+import { ChatHistoryItem, IntegrationMode } from '@/types/chat/types';
 
 interface SidebarProps {
   chatHistory: ChatHistoryItem[]
