@@ -1,10 +1,11 @@
 "use client"
+import React from 'react';
 
-import { SignInForm } from '@/app/auth/signin/SignInForm';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthLink } from '@/components/auth/AuthLink';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignIn';
 import { OrSeparator } from '@/components/auth/OrSeperator';
+import { SignInForm } from '@/components/auth/signin/SignInForm';
 import { useAuthRedirect } from '@/hooks/auth/useAuthRedirect';
 
 export default function SignInPage() {
