@@ -1,5 +1,4 @@
-# .github/workflows/frontend.yml
-name: Frontend CI
+name: Community Chatbot Frontend CI
 
 on:
   push:
@@ -10,7 +9,7 @@ on:
       - 'community-chatbot/**'
 
 jobs:
-  build-frontend:
+  frontend-build-and-test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,8 +24,11 @@ jobs:
         with:
           node-version: 18
 
+      - name: Install pnpm
+        run: npm install -g pnpm
+
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Create .env.local from secrets
         run: |
@@ -37,5 +39,8 @@ jobs:
           echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" >> .env.local
           echo "NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" >> .env.local
 
+      - name: Run tests
+        run: pnpm test
+
       - name: Build frontend
-        run: npm run build
+        run: pnpm run build
