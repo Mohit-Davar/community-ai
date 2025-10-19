@@ -1,15 +1,11 @@
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
-import type { IntegrationMode } from '@/types/chat/types';
+import { useChatStore } from '@/lib/store/chatStore';
+import { integrationModes } from '@/lib/constants/chat';
 
-interface ModeSelectorProps {
-  integrationModes: IntegrationMode[]
-  selectedMode: string
-  handleModeChange: (modeId: string) => void
-}
-
-export function ModeSelector({ integrationModes, selectedMode, handleModeChange }: ModeSelectorProps) {
+export function ModeSelector() {
+  const { selectedMode, setSelectedMode: handleModeChange } = useChatStore();
   return (
     <div className="bg-white dark:bg-gray-800 p-4 dark:border-gray-700 border-b">
       <div className="gap-2 sm:gap-3 grid grid-cols-2 lg:grid-cols-4">
@@ -18,8 +14,8 @@ export function ModeSelector({ integrationModes, selectedMode, handleModeChange 
             key={mode.id}
             variant={selectedMode === mode.id ? "default" : "outline"}
             className={`flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start gap-1 sm:gap-2 h-auto p-2 sm:p-3 text-center sm:text-left transition-all ${selectedMode === mode.id
-              ? mode.color
-              : "hover:bg-gray-50 dark:hover:bg-gray-700"
+              ? "bg-blue-600 hover:bg-blue-700"
+              : ""
               }`}
             onClick={() => handleModeChange(mode.id)}
           >

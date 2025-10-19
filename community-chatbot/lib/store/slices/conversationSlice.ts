@@ -1,7 +1,11 @@
 import { StateCreator } from 'zustand';
 
 import { integrationModes } from '@/lib/constants/chat';
-import { addConversation, deleteConversationFromDB } from '@/lib/firestore';
+import {
+	addConversation,
+	deleteConversationFromDB,
+	updateConversation,
+} from '@/lib/firestore';
 import { ChatHistoryItem } from '@/types/chat/types';
 
 export interface ConversationSlice {
@@ -14,30 +18,35 @@ export interface ConversationSlice {
 	createNewConversation: () => Promise<string>;
 	switchConversation: (conversationId: string) => void;
 	deleteConversation: (conversationId: string, e: React.MouseEvent) => Promise<void>;
+	renameConversation: (conversationId: string, newTitle: string) => Promise<void>;
 }
 
-export const createConversationSlice: StateCreator<ConversationSlice & any, [], [], ConversationSlice> = (set, get) => ({
-	selectedMode: "general",
+export const createConversationSlice: StateCreator<
+	ConversationSlice & any,
+	[],
+	[],
+	ConversationSlice
+> = (set, get) => ({
+	selectedMode: 'general',
 	chatHistory: [],
 	activeConversationIds: {},
 	isCreatingNewChat: false,
 
 	setSelectedMode: (modeId) => {
-		set({ selectedMode: modeId });
 		const { activeConversationIds, chatHistory } = get();
 		const activeConvId = activeConversationIds[modeId];
+		const activeConversation = chatHistory.find((c: { id: any; }) => c.id === activeConvId);
 
-		if (activeConvId) {
-			const activeConversation = chatHistory.find((c) => c.id === activeConvId);
-			if (activeConversation) {
-				set({
-					messages: activeConversation.messages || [],
-					chatHistory: chatHistory.map((chat) => (chat.id === activeConvId ? { ...chat, active: true } : { ...chat, active: false }))
-				});
-			}
-		} else {
-			set({ messages: [] });
-		}
+		const updatedChatHistory = chatHistory.map((chat: { id: any; }) => ({
+			...chat,
+			active: chat.id === activeConvId,
+		}));
+
+		set({
+			selectedMode: modeId,
+			messages: activeConversation ? activeConversation.messages || [] : [],
+			chatHistory: updatedChatHistory,
+		});
 	},
 
 	createNewConversation: async () => {
@@ -45,61 +54,62 @@ export const createConversationSlice: StateCreator<ConversationSlice & any, [], 
 		const { selectedMode, currentUser, chatHistory, activeConversationIds } = get();
 		const currentMode = integrationModes.find((m) => m.id === selectedMode);
 
-		const newChatData: Omit<ChatHistoryItem, "id"> = {
-			title: `New ${currentMode?.name || "Chat"}`,
+		const newChatData: Omit<ChatHistoryItem, 'id'> = {
+			title: `New ${currentMode?.name || 'Chat'}`,
 			date: new Date().toLocaleDateString(),
-			icon: currentMode?.image || "/mifos.png",
+			icon: currentMode?.image || '/mifos.png',
 			messages: [],
 			mode: selectedMode as any,
 			active: true,
-			userId: currentUser?.uid!
+			userId: currentUser?.uid!,
 		};
 
+		let newId: string;
 		try {
-			const newId = await addConversation(newChatData);
-
-			const updatedHistory = [
-				{ ...newChatData, id: newId },
-				...chatHistory.map((chat) => (chat.mode === selectedMode ? { ...chat, active: false } : chat)),
-			];
-
-			set({
-				chatHistory: updatedHistory,
-				activeConversationIds: { ...activeConversationIds, [selectedMode]: newId },
-				messages: [],
-				input: ""
-			});
-			return newId;
-		} catch (err) {
-			console.error("Failed to create new conversation in Firestore:", err);
-			const fallbackId = crypto.randomUUID();
-			const updatedHistory = [
-				{ ...newChatData, id: fallbackId },
-				...chatHistory.map((chat) => (chat.mode === selectedMode ? { ...chat, active: false } : chat)),
-			];
-			set({
-				chatHistory: updatedHistory,
-				activeConversationIds: { ...activeConversationIds, [selectedMode]: fallbackId },
-				messages: [],
-				input: ""
-			});
-			return fallbackId;
-		} finally {
-			set({ isCreatingNewChat: false, sidebarOpen: false });
+			newId = await addConversation(newChatData);
+		} catch (error) {
+			console.error('Failed to create new conversation in Firestore:', error);
+			newId = crypto.randomUUID();
 		}
+
+		const updatedHistory = [
+			{ ...newChatData, id: newId },
+			...chatHistory.map((chat: { mode: any; }) =>
+				chat.mode === selectedMode ? { ...chat, active: false } : chat
+			),
+		];
+
+		set({
+			chatHistory: updatedHistory,
+			activeConversationIds: { ...activeConversationIds, [selectedMode]: newId },
+			messages: [],
+			input: '',
+			isCreatingNewChat: false,
+			sidebarOpen: false,
+		});
+
+		return newId;
 	},
 
 	switchConversation: (conversationId) => {
 		const { chatHistory, activeConversationIds } = get();
-		const conversation = chatHistory.find((c) => c.id === conversationId);
-		if (!conversation) return;
+		const conversationToSwitch = chatHistory.find((c: { id: string; }) => c.id === conversationId);
+		if (!conversationToSwitch) return;
+
+		const updatedHistory = chatHistory.map((chat: { id: string; }) => ({
+			...chat,
+			active: chat.id === conversationId,
+		}));
 
 		set({
-			selectedMode: conversation.mode,
-			activeConversationIds: { ...activeConversationIds, [conversation.mode]: conversationId },
-			messages: conversation.messages || [],
-			chatHistory: chatHistory.map((chat) => (chat.id === conversationId ? { ...chat, active: true } : { ...chat, active: false })),
-			sidebarOpen: false
+			selectedMode: conversationToSwitch.mode,
+			activeConversationIds: {
+				...activeConversationIds,
+				[conversationToSwitch.mode]: conversationId,
+			},
+			messages: conversationToSwitch.messages || [],
+			chatHistory: updatedHistory,
+			sidebarOpen: false,
 		});
 	},
 
@@ -107,33 +117,54 @@ export const createConversationSlice: StateCreator<ConversationSlice & any, [], 
 		e.stopPropagation();
 		const { chatHistory, activeConversationIds, selectedMode, switchConversation } = get();
 
-		const conversationToDelete = chatHistory.find((c) => c.id === conversationId);
+		const conversationToDelete = chatHistory.find((c: { id: string; }) => c.id === conversationId);
 		if (!conversationToDelete) return;
 
-		const conversationsForMode = chatHistory.filter((c) => c.mode === conversationToDelete.mode);
-		if (conversationsForMode.length <= 1) {
-			return; // Prevent deleting the last conversation in a mode
-		}
+		const isLastInMode =
+			chatHistory.filter((c: { mode: any; }) => c.mode === conversationToDelete.mode).length <= 1;
+		if (isLastInMode) return; // Prevent deleting the last conversation in a mode
 
 		try {
 			await deleteConversationFromDB(conversationId);
-		} catch (err) {
-			console.error("Failed to delete conversation from Firestore:", err);
+		} catch (error) {
+			console.error('Failed to delete conversation from Firestore:', error);
 		}
 
-		const newChatHistory = chatHistory.filter((c) => c.id !== conversationId);
-		set({ chatHistory: newChatHistory });
+		const updatedChatHistory = chatHistory.filter((c: { id: string; }) => c.id !== conversationId);
+		set({ chatHistory: updatedChatHistory });
 
-		if (activeConversationIds[conversationToDelete.mode] === conversationId) {
-			const remaining = newChatHistory.filter((c) => c.mode === conversationToDelete.mode);
-			if (remaining.length > 0) {
-				const newActiveId = remaining[0].id;
+		const wasActive = activeConversationIds[conversationToDelete.mode] === conversationId;
+		if (wasActive) {
+			const remainingConversations = updatedChatHistory.filter(
+				(c: { mode: any; }) => c.mode === conversationToDelete.mode
+			);
+			if (remainingConversations.length > 0) {
+				const newActiveId = remainingConversations[0].id;
 				if (selectedMode === conversationToDelete.mode) {
 					switchConversation(newActiveId);
 				} else {
-					set({ activeConversationIds: { ...get().activeConversationIds, [conversationToDelete.mode]: newActiveId } });
+					set({
+						activeConversationIds: {
+							...get().activeConversationIds,
+							[conversationToDelete.mode]: newActiveId,
+						},
+					});
 				}
 			}
+		}
+	},
+
+	renameConversation: async (conversationId, newTitle) => {
+		set((state: { chatHistory: any[]; }) => ({
+			chatHistory: state.chatHistory.map((chat: { id: string; }) =>
+				chat.id === conversationId ? { ...chat, title: newTitle } : chat
+			),
+		}));
+
+		try {
+			await updateConversation(conversationId, { title: newTitle });
+		} catch (error) {
+			console.error('Failed to rename conversation in Firestore:', error);
 		}
 	},
 });

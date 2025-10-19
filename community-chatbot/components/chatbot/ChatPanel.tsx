@@ -1,38 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { IntegrationMode } from '@/types/chat/types';
-import type { Message } from '@ai-sdk/react';
+import { useChatStore } from '@/lib/store/chatStore';
+import { integrationModes, quickActions } from '@/lib/constants/chat';
 
 import { ChatMessage } from './ChatMessage';
 
-interface ChatPanelProps {
-  messages: Message[]
-  status: string
-  error: Error | undefined
-  reload: () => void
-  scrollAreaRef: React.RefObject<HTMLDivElement>
-  currentMode: IntegrationMode | undefined
-  quickActions: string[]
-  handleQuickAction: (action: string) => void
-  integrationModes: IntegrationMode[]
-}
-
-export function ChatPanel({
-  messages,
-  status,
-  error,
-  reload,
-  scrollAreaRef,
-  currentMode,
-  quickActions,
-  handleQuickAction,
-  integrationModes,
-}: ChatPanelProps) {
+export function ChatPanel() {
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const { messages, status, error, reload, selectedMode, handleQuickAction } = useChatStore();
+  const currentMode = integrationModes.find((m) => m.id === selectedMode);
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollAreaRef.current) {

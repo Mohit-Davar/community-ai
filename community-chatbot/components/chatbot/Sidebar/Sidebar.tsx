@@ -6,25 +6,8 @@ import {
   Header as SidebarHeader,
 } from '@/components/chatbot/Sidebar/SidebarHeader';
 import { Sidebar, SidebarContent, useSidebar } from '@/components/ui/sidebar';
-import { ChatHistoryItem, IntegrationMode } from '@/types/chat/types';
 
-interface SidebarProps {
-  chatHistory: ChatHistoryItem[]
-  isCreatingNewChat: boolean
-  createNewConversation: () => void
-  switchConversation: (conversationId: string) => void
-  deleteConversation: (conversationId: string, e: React.MouseEvent) => void
-  integrationModes: IntegrationMode[]
-}
-
-export function AppSidebar({
-  chatHistory,
-  isCreatingNewChat,
-  createNewConversation,
-  switchConversation,
-  deleteConversation,
-  integrationModes,
-}: SidebarProps) {
+export function AppSidebar() {
   const { state } = useSidebar()
   const isExpanded = state === "expanded"
 
@@ -32,24 +15,12 @@ export function AppSidebar({
     <Sidebar side="left" variant="sidebar" collapsible="icon">
       {/* Header */}
       <SidebarHeader isExpanded={isExpanded} />
-
       {/* Content */}
       <SidebarContent className="flex flex-col h-full">
         {/* New Chat Button */}
-        <NewChatButton
-          isExpanded={isExpanded}
-          isCreatingNewChat={isCreatingNewChat}
-          createNewConversation={createNewConversation}
-        />
-
+        <NewChatButton isExpanded={isExpanded} />
         {/* Scrollable History */}
-        <ChatHistory
-          chatHistory={chatHistory}
-          deleteConversation={deleteConversation}
-          integrationModes={integrationModes}
-          isExpanded={isExpanded}
-          switchConversation={switchConversation}
-        />
+        <ChatHistory isExpanded={isExpanded} />
       </SidebarContent>
     </Sidebar>
   )

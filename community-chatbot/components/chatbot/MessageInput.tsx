@@ -1,20 +1,22 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Paperclip, Send, StopCircle } from "lucide-react"
-import type { UseChatHelpers } from "@ai-sdk/react"
+import { useChatStore } from "@/lib/store/chatStore"
+import { integrationModes } from "@/lib/constants/chat"
 
-interface MessageInputProps extends Pick<UseChatHelpers, "input" | "handleInputChange" | "handleSubmit" | "status" | "stop"> {
-  currentModeName: string | undefined
-}
+export function MessageInput() {
+  const { input, setInput, sendMessage, status, selectedMode } = useChatStore();
+  const currentMode = integrationModes.find((m) => m.id === selectedMode);
+  const currentModeName = currentMode?.name;
 
-export function MessageInput({
-  input,
-  handleInputChange,
-  handleSubmit,
-  status,
-  stop,
-  currentModeName,
-}: MessageInputProps) {
+  const handleSubmit = (event?: React.FormEvent) => {
+    if (event) event.preventDefault();
+    sendMessage();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
   return (
     <div className="bg-white dark:bg-gray-800 p-4 dark:border-gray-700 border-t">
       <div className="mx-auto max-w-4xl">
@@ -30,7 +32,7 @@ export function MessageInput({
           </div>
 
           {status === "streaming" ? (
-            <Button type="button" variant="outline" size="icon" onClick={() => stop()}>
+            <Button type="button" variant="outline" size="icon" onClick={() => { }}>
               <StopCircle className="w-4 h-4" />
             </Button>
           ) : (

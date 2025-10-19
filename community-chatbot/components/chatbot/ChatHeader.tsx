@@ -4,21 +4,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
-import type { IntegrationMode } from '@/types/chat/types';
+import { useChatStore } from '@/lib/store/chatStore';
+import { integrationModes } from '@/lib/constants/chat';
 
 import { ThemeToggle } from './ThemeToggle';
 
-interface ChatHeaderProps {
-  currentMode: IntegrationMode | undefined
-  isCreatingNewChat: boolean
-  createNewConversation: () => void
-}
-
-export function ChatHeader({
-  currentMode,
-  isCreatingNewChat,
-  createNewConversation,
-}: ChatHeaderProps) {
+export function ChatHeader() {
+  const { selectedMode, isCreatingNewChat, createNewConversation } = useChatStore();
+  const currentMode = integrationModes.find((m) => m.id === selectedMode);
   const { toggleSidebar, setOpen, open } = useSidebar()
 
   return (
