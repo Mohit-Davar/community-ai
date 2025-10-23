@@ -94,59 +94,53 @@ export const createConversationSlice: StateCreator<
 
     deleteConversation: async (chatId: string) => {
         const { currentUser } = get();
-        if (!currentUser) {
-            throw new Error("User not authenticated.");
-        }
+        if (!currentUser) throw new Error("User not authenticated.");
 
-        // Mark this chat as pending deletion
+        // Mark as pending
         set(state => ({
             pendingOperations: [...state.pendingOperations, chatId]
         }));
 
         try {
             await deleteConversationFromDB(chatId, currentUser.uid);
-            // Remove from local state immediately
-            set((state) => ({
-                chats: state.chats.filter((chat) => chat.id !== chatId)
+            set(state => ({
+                chats: state.chats.filter(chat => chat.id !== chatId)
             }));
         } catch (error) {
             console.error("Error deleting conversation:", error);
-            // Remove from pending on error
+            throw error;
+        } finally {
+            // Remove from pending whether success or error
             set(state => ({
                 pendingOperations: state.pendingOperations.filter(id => id !== chatId)
             }));
-            throw error;
         }
     },
 
+
     renameConversation: async (chatId: string, newTitle: string) => {
         const { currentUser } = get();
-        if (!currentUser) {
-            throw new Error("User not Authenticated.");
-        }
+        if (!currentUser) throw new Error("User not Authenticated.");
 
-        // Mark chat as pending rename
         set(state => ({
             pendingOperations: [...state.pendingOperations, chatId]
         }));
 
         try {
             const newDate = new Date();
-            // Update title and timestamp locally for instant UI feedback
-            set((state) => ({
-                chats: state.chats.map((chat) =>
-                    chat.id === chatId
-                        ? { ...chat, title: newTitle, updatedAt: newDate }
-                        : chat
-                ),
+            set(state => ({
+                chats: state.chats.map(chat =>
+                    chat.id === chatId ? { ...chat, title: newTitle, updatedAt: newDate } : chat
+                )
             }));
             await updateConversation(chatId, currentUser.uid, { title: newTitle, updatedAt: newDate });
         } catch (error) {
             console.error("Error renaming conversation:", error);
+            throw error;
+        } finally {
             set(state => ({
                 pendingOperations: state.pendingOperations.filter(id => id !== chatId)
-            })); // Remove from pending on error
-            throw error;
+            }));
         }
     },
 
