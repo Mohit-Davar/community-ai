@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { usePathname } from 'next/navigation';
 
@@ -12,14 +12,18 @@ export function useFetchConversation() {
     const pathname = usePathname();
     const currentMode = pathname.split('/')[1];
     const { fetchConversations, currentUser, chats } = useAgentStore();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Cleanup Flag
         let isMounted = true;
 
-        if (!currentUser) return;
+        if (!currentUser) {
+            setLoading(false);
+            return;
+        }
 
         const loadConversations = async () => {
+            setLoading(true);
             try {
                 await fetchConversations(currentUser, currentMode);
             } catch (err: any) {
@@ -30,15 +34,18 @@ export function useFetchConversation() {
                     title: 'Error loading chats',
                     description: err.message || 'Could not retrieve your conversations.',
                 });
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
         loadConversations();
 
-        // Cleanup function
         return () => {
             isMounted = false;
         };
     }, [currentMode, currentUser, fetchConversations, toast]);
 
-    return { chats };
+    return { chats, loading };
 }

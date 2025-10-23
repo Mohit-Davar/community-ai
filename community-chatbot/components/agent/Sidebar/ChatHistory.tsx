@@ -22,7 +22,7 @@ export function ChatHistory() {
     const activeChat = pathname.split('/')[2];
 
     const { pendingOperations } = useAgentStore();
-    const { chats } = useFetchConversation();
+    const { chats, loading } = useFetchConversation();
     const { rename } = useRenameConversation();
     const { remove } = useDeleteConversation();
 
@@ -43,6 +43,14 @@ export function ChatHistory() {
         if (disabled) return;
         router.push(`/${currentMode}/${chatId}`);
     };
+
+    if (loading) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <Loader2 className="size-6 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <SidebarGroup className="space-y-4 overflow-y-auto">
