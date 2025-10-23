@@ -8,11 +8,11 @@ export interface Message {
 export interface ChatHistoryItem {
     id: string;
     title: string;
-    date: string;
+    createdAt: Date;
+    updatedAt: Date;
     icon: string;
     messages: Message[];
     mode: string;
-    active?: boolean;
     userId: string;
 }
 
@@ -29,7 +29,6 @@ export interface IntegrationMode {
 
 export interface Conversation extends Omit<ChatHistoryItem, 'messages'> {
     messages: Message[];
-    active: boolean;
 }
 
 export type ChatStatus = 'ready' | 'submitted' | 'streaming' | 'error';
