@@ -5,22 +5,23 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '@/app/firebase/config';
-import { integrationModes } from '@/lib/constants/chat';
 import type { ChatHistoryItem, Message } from '@/types/chat/types';
 
 // Fetch all chats for a user, optionally filtered by mode.
 export const fetchChats = async (
 	userId: string,
-	mode?: string
+	mode: string
 ): Promise<ChatHistoryItem[]> => {
 	try {
 		if (!userId) throw new Error('Unable to fetch chats.');
 
 		const chatsCol = collection(db, 'chats');
-		const queries = [where('userId', '==', userId)];
-		if (mode) queries.push(where('mode', '==', mode));
+		const q = query(
+			chatsCol,
+			where('userId', '==', userId),
+			where('mode', '==', mode)
+		);
 
-		const q = query(chatsCol, ...queries);
 		const chatsSnapshot = await getDocs(q);
 
 		return chatsSnapshot.docs.map((d) => {
@@ -38,42 +39,6 @@ export const fetchChats = async (
 			error instanceof Error
 				? `Failed to fetch chats: ${error.message}`
 				: 'An unexpected error occurred while fetching chats.'
-		);
-	}
-};
-
-
-// Creates a default set of chats for a newly registered user.
-export const createDefaultChats = async (
-	userId: string
-): Promise<ChatHistoryItem[]> => {
-	try {
-		if (!userId) throw new Error('Cannot create default chats.');
-
-		const newDate = new Date();
-		const defaultChats = integrationModes.map((mode) => ({
-			title: `New ${mode.name} Chat`,
-			createdAt: newDate,
-			updatedAt: newDate,
-			icon: mode.image,
-			messages: [] as Message[],
-			mode: mode.id,
-			userId,
-		}));
-
-		const newChats: ChatHistoryItem[] = [];
-		for (const defaultChat of defaultChats) {
-			const chatRef = await addDoc(collection(db, 'chats'), defaultChat);
-			newChats.push({ ...defaultChat, id: chatRef.id });
-		}
-
-		return newChats;
-	} catch (error) {
-		console.error('Error creating default chats:', error);
-		throw new Error(
-			error instanceof Error
-				? `Failed to create default chats: ${error.message}`
-				: 'An unexpected error occurred while creating default chats.'
 		);
 	}
 };
