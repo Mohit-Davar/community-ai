@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { useAgentStore } from '@/lib/store/agent/agentStore';
 
 export function SubmitButton() {
-  const { input, status } = useAgentStore();
+  const { input, status, stopStreaming } = useAgentStore();
 
   if (status === "streaming") {
     return (
-      <Button type="button" variant="outline" size="icon" onClick={() => {}}>
+      <Button type="button" variant="outline" size="icon" onClick={stopStreaming}>
         <StopCircle className="w-4 h-4" />
       </Button>
     );
