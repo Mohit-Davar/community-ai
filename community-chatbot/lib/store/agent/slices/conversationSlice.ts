@@ -3,8 +3,8 @@ import type { StateCreator } from 'zustand';
 
 import { integrationModes } from '@/lib/constants/chat';
 import {
-  addConversation, deleteConversationFromDB, fetchChats,
-  updateConversation,
+    addConversation, deleteConversationFromDB, fetchChats,
+    updateConversation,
 } from '@/lib/firestore';
 import { authSlice } from '@/lib/store/agent/slices/authSlice';
 import { ChatHistoryItem } from '@/types/chat/types';
@@ -116,7 +116,6 @@ export const createConversationSlice: StateCreator<
             }));
         }
     },
-
 
     renameConversation: async (chatId: string, newTitle: string) => {
         const { currentUser } = get();

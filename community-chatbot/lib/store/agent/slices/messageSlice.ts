@@ -14,11 +14,13 @@ export interface messageSlice {
   messages: Message[];
   input: string;
   status: "ready" | "loading" | "submitted" | "streaming" | "error";
+  abortController: AbortController | null;
 
   setInput: (input: string) => void;
   sendMessage: (chatId: string, mode: string) => Promise<void>;
   fetchMessages: (chatId: string) => Promise<void>;
   handleQuickAction: (action: string, chatId: string, mode: string) => void;
+  stopStreaming: () => void;
 }
 
 export const createMessageSlice: StateCreator<
@@ -30,6 +32,7 @@ export const createMessageSlice: StateCreator<
   input: "",
   messages: [],
   status: "ready",
+  abortController: null,
 
   setInput: (input) => set({ input }),
 
@@ -84,6 +87,38 @@ export const createMessageSlice: StateCreator<
       return { messages: updatedMessages, input: "", status: "submitted", chats: updatedChats };
     });
 
+    const controller = new AbortController();
+    set({ abortController: controller });
+
+    const finalize = async () => {
+      const finalMessages = get().messages;
+      const finalDate = new Date();
+      const currentUser = get().currentUser;
+
+      set(state => ({
+        status: "ready",
+        abortController: null,
+        chats: state.chats
+          .map(c =>
+            c.id === chatId
+              ? { ...c, messages: finalMessages, updatedAt: finalDate, ...(newTitle && { title: newTitle }) }
+              : c
+          )
+          .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+      }));
+
+      if (!currentUser) {
+        console.error("User not authenticated for final update.");
+        return;
+      }
+
+      await updateConversation(chatId, currentUser.uid, {
+        messages: finalMessages,
+        updatedAt: finalDate,
+        ...(newTitle && { title: newTitle }),
+      });
+    };
+
     try {
       const currentUser = get().currentUser;
       if (!currentUser) {
@@ -99,6 +134,7 @@ export const createMessageSlice: StateCreator<
           conversationId: chatId,
           userId: currentUser.uid,
         }),
+        signal: controller.signal,
       });
 
       if (!response.body) throw new Error("No response body from API.");
@@ -135,39 +171,26 @@ export const createMessageSlice: StateCreator<
       }
 
       // Done streaming → mark ready + update conversation and Firestore
-      const finalMessages = get().messages;
-      const finalDate = new Date();
+      await finalize();
 
-      set(state => ({
-        status: "ready",
-        chats: state.chats
-          .map(c =>
-            c.id === chatId
-              ? { ...c, messages: finalMessages, updatedAt: finalDate, ...(newTitle && { title: newTitle }) } :
-              c
-          )
-          .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
-      }));
-
-      if (!currentUser) {
-        throw new Error("User not authenticated.");
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Streaming stopped by user.');
+        await finalize();
+      } else {
+        console.error(`Error sending ${mode} message:`, err);
+        set({ status: "error", abortController: null });
+        throw err;
       }
-
-      await updateConversation(chatId, currentUser.uid, {
-        messages: finalMessages,
-        updatedAt: finalDate,
-        ...(newTitle && { title: newTitle }),
-      });
-
-    } catch (err) {
-      console.error(`Error sending ${mode} message:`, err);
-      set({ status: "error" });
-      throw err; // Re-throw the error
     }
   },
 
   handleQuickAction: (action, chatId, mode) => {
     get().setInput(action);
     get().sendMessage(chatId, mode);
+  },
+
+  stopStreaming: () => {
+    get().abortController?.abort();
   },
 });
