@@ -1,7 +1,5 @@
 import { streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { db } from "@/app/firebase/config";
-import { collection, addDoc, doc, setDoc, Timestamp } from "firebase/firestore";
 
 // Allow streaming responses up to 120 seconds
 export const maxDuration = 120;
@@ -72,13 +70,6 @@ export async function POST(req: Request) {
       ]);
     }
 
-    // Save user message to Firestore
-    if (conversationId && userId) {
-      saveMessageToFirestore(conversationId, userId, lastMessage).catch(error => {
-        console.error("Failed to save message to Firestore:", error);
-      });
-    }
-
     return result;
   } catch (error) {
     console.error("Chat API error:", error);
@@ -92,22 +83,7 @@ export async function POST(req: Request) {
   }
 }
 
-async function saveMessageToFirestore(conversationId: string, userId: string, message: ChatMessage) {
-  try {
-    // Save to the conversation's messages array (simpler structure)
-    const conversationRef = doc(db, "conversations", conversationId);
 
-    const messagesRef = collection(conversationRef, "messages");
-    await addDoc(messagesRef, {
-      ...message,
-      timestamp: Timestamp.now(),
-      userId: userId,
-    });
-  } catch (error) {
-    console.error("Firestore save error:", error);
-    throw error;
-  }
-}
 
 async function handleSlackRequest(message: string, messages: ChatMessage[]) {
   try {
