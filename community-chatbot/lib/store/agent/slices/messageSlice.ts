@@ -78,9 +78,7 @@ export const createMessageSlice: StateCreator<
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [userMessage],
-          mode,
-          conversationId: chatId,
-          userId: currentUser.uid,
+          mode
         }),
         signal: controller.signal,
       });
