@@ -18,7 +18,7 @@ export interface messageSlice {
   abortController: AbortController | null;
 
   setInput: (input: string) => void;
-  sendMessage: (chatId: string, mode: string) => Promise<void>;
+  sendMessage: (chatId: string, mode: string, text: string) => Promise<void>;
   fetchMessages: (chatId: string) => Promise<void>;
   handleQuickAction: (action: string, chatId: string, mode: string) => void;
   stopStreaming: () => void;
@@ -50,24 +50,19 @@ export const createMessageSlice: StateCreator<
     }
   },
 
-  sendMessage: async (chatId, mode) => {
-    const messageContent = get().input.trim();
-    if (!messageContent) return;
-
-    const currentUser = get().currentUser;
-    if (!currentUser) throw new Error("User not Authenticated.");
-
+  sendMessage: async (chatId, mode, text) => {
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
-      content: messageContent,
+      content: text,
       timestamp: Date.now(),
     };
 
-    const isFirstMessage = get().messages.length === 0;
-    const newTitle = isFirstMessage ? generateChatTitle(userMessage.content) : undefined;
+    const title =
+      get().messages.length === 0 &&
+      generateChatTitle(userMessage.content);
 
-    performStateUpdate(set, userMessage, chatId, newTitle);
+    performStateUpdate(set, userMessage, chatId, title);
 
     const controller = new AbortController();
     set({ abortController: controller });
@@ -84,21 +79,19 @@ export const createMessageSlice: StateCreator<
       });
 
       await handleStreamingResponse(response, set);
-      await finaliseConversation(set, get, chatId, newTitle);
+      await finaliseConversation(set, get, chatId, title);
 
     } catch (err: any) {
-      await handleSendError(err, set, get, chatId, newTitle);
+      await handleSendError(err, set, get, chatId, title);
+      throw err;
     }
   },
 
   handleQuickAction: (action, chatId, mode) => {
-    get().setInput(action);
-    get().sendMessage(chatId, mode);
+    get().sendMessage(chatId, mode, action);
   },
 
   stopStreaming: () => {
     get().abortController?.abort();
   },
 });
-
-

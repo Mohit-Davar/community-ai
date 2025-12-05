@@ -1,8 +1,8 @@
-import { maxDuration } from '@/app/api/chat/lib/constants';
 import { handleGeneralRequest } from '@/app/api/chat/handlers/general';
 import { handleGitHubRequest } from '@/app/api/chat/handlers/github';
 import { handleJiraRequest } from '@/app/api/chat/handlers/jira';
 import { handleSlackRequest } from '@/app/api/chat/handlers/slack';
+import { maxDuration } from '@/app/api/chat/lib/constants';
 import { Message } from '@/types/chat/types';
 
 export { maxDuration };
@@ -53,10 +53,10 @@ export async function POST(req: Request) {
     // Validate each message in the array to ensure it conforms to the Message type
     for (const msg of messages) {
       if (typeof msg !== 'object' || msg === null ||
-          typeof msg.id !== 'string' ||
-          !['user', 'assistant', 'system'].includes(msg.role) ||
-          typeof msg.content !== 'string' ||
-          typeof msg.timestamp !== 'number') {
+        typeof msg.id !== 'string' ||
+        !['user', 'assistant', 'system'].includes(msg.role) ||
+        typeof msg.content !== 'string' ||
+        typeof msg.timestamp !== 'number') {
         return new Response(
           JSON.stringify({ error: "Invalid message format in 'messages' array." }),
           { status: 400, headers: { "Content-Type": "application/json" } }

@@ -19,7 +19,7 @@ export const performStateUpdate = (
     set: StoreApi<MessageStore>['setState'],
     userMessage: Message,
     chatId: string,
-    newTitle?: string
+    newTitle: string  | false
 ) => {
     set((state) => {
         const updatedMessages = [...state.messages, userMessage];
@@ -80,7 +80,7 @@ export const finaliseConversation = async (
     set: StoreApi<MessageStore>['setState'],
     get: StoreApi<MessageStore>['getState'],
     chatId: string,
-    newTitle?: string
+    newTitle: string | false
 ) => {
     const finalMessages = get().messages;
     const finalDate = new Date();
@@ -116,7 +116,7 @@ export const handleSendError = async (
     set: StoreApi<MessageStore>['setState'],
     get: StoreApi<MessageStore>['getState'],
     chatId: string,
-    newTitle?: string
+    newTitle: string | false
 ) => {
     if (err.name === 'AbortError') {
         console.log('Streaming stopped by user.');
