@@ -92,3 +92,44 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+
+  /* Minimal aesthetic scrollbar */
+  .scrollbar-aesthetic {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.8) transparent;
+  }
+
+  /* Chrome / Edge / Safari */
+  .scrollbar-aesthetic::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-aesthetic::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-aesthetic::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 9999px;
+  }
+
+  .scrollbar-aesthetic::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 1);
+  }
+
+  /* Dark mode */
+  .dark .scrollbar-aesthetic {
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+
+  .dark .scrollbar-aesthetic::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .dark .scrollbar-aesthetic::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
