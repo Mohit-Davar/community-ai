@@ -1,7 +1,7 @@
 import { useSendMessage } from '@/hooks/agent/Mode/Chat/useSendMessage';
 
-import { MessageInput } from './InputBox/MessageInput';
-import { SubmitButton } from './InputBox/SubmitButton';
+import { MessageInput } from '@/components/agent/Mode/Chat/InputBox/MessageInput';
+import { SubmitButton } from '@/components/agent/Mode/Chat/InputBox/SubmitButton';
 
 export function InputBox() {
   const { handleSendMessage } = useSendMessage();
