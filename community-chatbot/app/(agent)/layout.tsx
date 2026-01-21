@@ -5,7 +5,7 @@ import React, { useEffect } from 'react';
 import { ChatHeader } from '@/components/agent/Header';
 import { ModeSelector } from '@/components/agent/ModeSelector';
 import { AppSidebar } from '@/components/agent/Sidebar';
-import { AppTour } from '@/components/agent/Tour/AppTour';
+import { AppTour } from '@/components/agent/AppTour';
 import { useAgentStore } from '@/lib/store/agent/agentStore';
 
 export default function RootLayout({
